@@ -1,0 +1,3 @@
+C:/Users/hugod/Documents/GitHub/Mario-bros/cmake-build-debug/CMakeFiles/Mario_bros.dir
+C:/Users/hugod/Documents/GitHub/Mario-bros/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/hugod/Documents/GitHub/Mario-bros/cmake-build-debug/CMakeFiles/rebuild_cache.dir
