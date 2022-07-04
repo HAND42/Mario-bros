@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
     SDL_Window *window = NULL;
     SDL_Renderer *renderer = NULL;
 
-    Rendu background = {NULL, NULL, SDL_LoadBMP("images/background_start.bmp")};
+    Rendu background = {NULL,0, SDL_LoadBMP("images/background_start.bmp")};
 
 
     //Lancement SDL

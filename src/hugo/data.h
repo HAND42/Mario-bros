@@ -11,23 +11,31 @@ typedef struct Map{
 
 } *Map;
 
-typedef enum BushType{
+typedef enum ElementType{
 	BigGreenBush;
 	SmallGreenBush;
 	SimpleGreenBush;
 	TripleGreenBush;
 	DoubleGreenBush;
+	InterrogationPoint;
+	Brick;
 
-}BushType;
+
+}ElementType;
 
 
 typedef struct Coord{
 	int x;
 	int y;
-	BushType type;
+}Coord;
 
-};
+typedef struct Element{
+	Coord c;
+	ElementType type;
+	char* s;
+	int size;
 
+}Element;
 
 //Function prototype
 void createMap(Map *map);
