@@ -4,13 +4,18 @@
 #ifndef __DISPLAY__C__
 #define __DISPLAY__C__
 
-void createRender (const char *img, 
-    SDL_Renderer *renderer, 
-    SDL_Window *window,
-    int nb1,
-    int nb2);
+typedef struct RenduElement{
+    SDL_Texture *texture;
+    SDL_Rect rectangle;
+    SDL_Surface *image;
+} RenduElement, *Rendu;
 
-void SDL_ExitWithError(const char *message);
+
+
+
+void createRender (Rendu r, SDL_Renderer *renderer, SDL_Window *window,int nb1,int nb2);
+
+void ExitWithError(const char *message);
 
 void SDL_LimitFPS(unsigned int limit);
 
