@@ -4,10 +4,13 @@
 #include <SDL.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <SDL_mixer.h>
 #include "display.h"
+#include "data.h"
 
 #define WINDOW_HEIGHT 600
 #define WINDOW_WIDTH 1066
+#define CROSS_SIZE  70
 
 #define FPS_LIMIT 33
 
@@ -16,11 +19,26 @@ int main(int argc, char *argv[])
     SDL_Window *window = NULL;
     SDL_Renderer *renderer = NULL;
 
-    Rendu background = {NULL,0, SDL_LoadBMP("images/background_start.bmp")};
+    MapGame m;
 
+    m = MapInit(1);
+    printf("bn");
+
+    PlaceElem(&m);
+    PrintMap(m);
+
+    RenduElement background = {NULL,{0,0,0,0}, SDL_LoadBMP("images/background_start.bmp"),1,2};
+    RenduElement start = {NULL,{0,0,0,0}, SDL_LoadBMP("images/start_btn.bmp"),5,1};
+    RenduElement help = {NULL,{0,0,0,0}, SDL_LoadBMP("images/help_btn.bmp"),4,1};
+    RenduElement about = {NULL,{0,0,0,0}, SDL_LoadBMP("images/about_btn.bmp"),3,1};
+    RenduElement help_pannel = {NULL,{0,0,0,0}, SDL_LoadBMP("images/help_pannel.bmp"),1,2};
+    RenduElement about_pannel = {NULL,{0,0,0,0}, SDL_LoadBMP("images/about_pannel.bmp"),1,2};
+    RenduElement start_pannel = {NULL,{0,0,0,0},SDL_LoadBMP("images/start_pannel.bmp"),2,8};
+
+    RenduElement start_screen[8]={background,start,help,about,start_pannel,help_pannel, about_pannel};
 
     //Lancement SDL
-    if (SDL_Init(SDL_INIT_VIDEO) !=0)
+    if (SDL_Init(SDL_INIT_VIDEO) <0)
         ExitWithError("Initialisation SDL");
 
     //Creation fenetre + rendu 
@@ -42,25 +60,38 @@ int main(int argc, char *argv[])
 
     SDL_SetWindowIcon(window, mario_bros_icon);
 
-    /*------------------Background Landscape Start Render----------------------------------*/ 
-    
-    createRender(&background, renderer, window, 1, 2);
+    SDL_bool programme_launched = SDL_TRUE;
+    int btn =0;
+    int ouvert=0;
 
-    /*------------------Start Mario Bros Pannel Render----------------------------------*/ 
 
-    //createRender("images/start_pannel.bmp", renderer, window, 2, 8);
-
-    /*-----------------All Button Render-----------------------*/
-    // start = createRender("images/start_btn.bmp", renderer, window, 5, 1);
-    // help = createRender("images/help_btn.bmp", renderer, window, 4, 1);
-    // about = createRender("images/about_btn.bmp", renderer, window, 3, 1);
+    createStartScreen(start_screen, renderer, window);
+    displayStartScreen(start_screen, renderer,window,btn);
 
     SDL_RenderPresent(renderer);
+    //Load musique
+    Mix_Music *musique =NULL; //Création d'un pointeur de type Mix_Music
+    musique = Mix_LoadMUS("audio/title.mp3");; //Chargement de la musique
+    if(musique == NULL)
+    {
+        printf("rt%s\n", Mix_GetError());
+    }
+
+    //Load sound effects
+    Mix_Chunk *open_click, *close_click;
+    open_click = Mix_LoadWAV("audio/open_sound.mp3");
+    //close_click = Mix_LoadWAV("audio/close_sound.mp3")
+
+    //LoadMusic();
+    Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024);
+    //PlayMusic(musique);
+    Mix_VolumeMusic(MIX_MAX_VOLUME/2);
+    Mix_PlayMusic(musique, -1);
+
+
 
 
     /*---------------------Event Management-------------------------------*/
-
-    SDL_bool programme_launched = SDL_TRUE;
 
     while (programme_launched)
     {
@@ -68,56 +99,86 @@ int main(int argc, char *argv[])
         SDL_Event event;
         frame_limit = SDL_GetTicks() + FPS_LIMIT;
         SDL_LimitFPS(frame_limit);
-
+        displayStartScreen(start_screen, renderer,window,btn);
+        SDL_RenderPresent(renderer);
+        SDL_RenderClear(renderer);
 
         while(SDL_PollEvent(&event))
         {
+
             switch(event.type)
             {
                 case SDL_MOUSEMOTION:
                     int x=event.motion.x;
                     int y=event.motion.y;
-                    printf("%d,%d\n", x, y);
 
-                    // int start_x_min = (WINDOW_WIDTH - rectangle.w)/2;
-                    // int start_y_min = (WINDOW_HEIGHT - 5*rectangle.h);
-                    // int start_x_max = (WINDOW_WIDTH - rectangle.w)/2 + rectangle.w;
-                    // int start_y_max = (WINDOW_HEIGHT - 5*rectangle.h) + rectangle.h;
-
-                    // if (start_x_min<x && x<start_x_max  && start_y_min<y && y<start_y_max){
-                    //     rectangle.x = 0;
-                    //     rectangle.y =0;
-                    //     printf("%d", rectangle.x);
-                    //     //createRender("images/start_btn_orange.bmp", renderer, window, 5, 1);
-                    //     SDL_RenderPresent(renderer);
-                    // }
-
-
-
-
+                    if (start_screen[1].rectangle.x<x && x<start_screen[1].rectangle.x+start_screen[1].rectangle.w  && start_screen[1].rectangle.y<y && y<start_screen[1].rectangle.y+start_screen[1].rectangle.h){
                         
-                    //SDL_MapRGB(sur->format, 0x00,0x00,0xff);
+                        changeImage(&(start_screen[1]), "images/start_btn_orange.bmp", renderer, window);
+                        changeImage(&(start_screen[2]), "images/help_btn.bmp", renderer, window);
+                        changeImage(&(start_screen[3]), "images/about_btn.bmp", renderer, window);
+    
+                    }
+                    else if (start_screen[2].rectangle.x<x && x<start_screen[2].rectangle.x+start_screen[2].rectangle.w  && start_screen[2].rectangle.y<y && y<start_screen[2].rectangle.y+start_screen[2].rectangle.h){
+                        
+                        changeImage(&(start_screen[2]), "images/help_btn_orange.bmp", renderer, window);
+                        changeImage(&(start_screen[1]), "images/start_btn.bmp", renderer, window);
+                        changeImage(&(start_screen[3]), "images/about_btn.bmp", renderer, window);
+                        
+                    }
+                    else if (start_screen[3].rectangle.x<x && x<start_screen[3].rectangle.x+start_screen[3].rectangle.w  && start_screen[3].rectangle.y<y && y<start_screen[3].rectangle.y+start_screen[3].rectangle.h){
+                        
+                        changeImage(&(start_screen[3]), "images/about_btn_orange.bmp", renderer, window);
+                        changeImage(&(start_screen[1]), "images/start_btn.bmp", renderer, window);
+                        changeImage(&(start_screen[2]), "images/help_btn.bmp", renderer, window);
+                      
+                    }
+                    else{
+                        changeImage(&(start_screen[1]), "images/start_btn.bmp", renderer, window);
+                        changeImage(&(start_screen[2]), "images/help_btn.bmp", renderer, window);
+                        changeImage(&(start_screen[3]), "images/about_btn.bmp", renderer, window);
+  
+                    }
                     break;
 
-                    /* Change the all screen in white
-                    SDL_Surface* screen = NULL;
-                    screen = SDL_GetWindowSurface(window);
-                    SDL_LockSurface(screen);
-                    SDL_memset(screen->pixels, 255, screen->h *screen->pitch);
-                    SDL_UnlockSurface(screen);
-                    SDL_UpdateWindowSurface(window);
-                    */
-
-                case SDL_KEYDOWN:
-                    switch(event.key.keysym.sym)
-                    {
-                        case SDLK_b:
-                        printf("Vous avez appuyez sur b");
-                        continue;
-
-                        default:
-                            continue; 
+                case SDL_MOUSEBUTTONDOWN:
+                    int xx = event.button.x;
+                    int yy = event.button.y;
+                    
+                    if (start_screen[1].rectangle.x<xx && xx<start_screen[1].rectangle.x+start_screen[1].rectangle.w  && start_screen[1].rectangle.y<yy && yy<start_screen[1].rectangle.y+start_screen[1].rectangle.h){
+                        btn=3;
+                        Mix_PlayChannel( -1, open_click, 0 );
                     }
+                    else if (start_screen[2].rectangle.x<xx && xx<start_screen[2].rectangle.x+start_screen[2].rectangle.w  && start_screen[2].rectangle.y<yy && yy<start_screen[2].rectangle.y+start_screen[2].rectangle.h){
+                        
+                        btn=1; 
+                        ouvert=1;
+                        Mix_PlayChannel( -1, open_click, 0 );
+                        printf("%d,%d\n", btn, ouvert);
+                        
+                    }
+                    else if (start_screen[3].rectangle.x<xx && xx<start_screen[3].rectangle.x+start_screen[3].rectangle.w  && start_screen[3].rectangle.y<yy && yy<start_screen[3].rectangle.y+start_screen[3].rectangle.h){
+                        
+                        Mix_PlayChannel( -1, open_click, 0 );
+                        btn=2; 
+                        ouvert=1;
+                    }
+
+                    if(ouvert==1 && btn==1){
+                        if (start_screen[5].rectangle.x+start_screen[5].rectangle.w - CROSS_SIZE<xx && xx<start_screen[5].rectangle.x+start_screen[5].rectangle.w  && start_screen[5].rectangle.y<yy && yy<start_screen[5].rectangle.y+CROSS_SIZE){
+                
+                            btn=0;
+                            ouvert=0;
+                        }
+                    }
+                    if(ouvert==1 && btn==2){
+                        if (start_screen[6].rectangle.x+start_screen[6].rectangle.w - CROSS_SIZE<xx && xx<start_screen[6].rectangle.x+start_screen[6].rectangle.w  && start_screen[6].rectangle.y<yy && yy<start_screen[6].rectangle.y+CROSS_SIZE){
+
+                            btn=0;
+                            ouvert=0;
+                        }
+                    }
+                    break;
 
                 case SDL_QUIT:
                     programme_launched = SDL_FALSE;
@@ -131,7 +192,7 @@ int main(int argc, char *argv[])
     }
 
     /*--------------------Closing Window---------------------*/
-
+    Mix_CloseAudio();
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
@@ -142,6 +203,31 @@ int main(int argc, char *argv[])
 
 /*
 Compile programm in command line :
-gcc src/*.c -o bin/MarioBros -I include -L lib -lmingw32 -lSDL2main -lSDL2
+gcc src/hugo/*.c -o bin/MarioBros -I include -L lib -lmingw32 -lSDL2main -lSDL2 -lSDL2_mixer
 bin\MarioBros.exe
 */
+
+
+// case SDL_KEYDOWN:
+//                     switch (event.key.keysym.sym)
+//                     {
+//                         case SDLK_p: 
+//                             if(Mix_PausedMusic() == 1)//Si la musique est en pause
+//                             {
+//                                 Mix_ResumeMusic(); //Reprendre la musique
+//                             }
+//                             else
+//                             {
+//                                 Mix_PauseMusic(); //Mettre en pause la musique
+//                             }
+//                             break;
+
+//                         case SDLK_BACKSPACE:
+//                             Mix_RewindMusic(); //Revient au début de la musique
+//                             break;
+//                         case SDLK_ESCAPE:
+//                             Mix_HaltMusic(); //Arrête la musique
+//                             break;
+//                     }
+//                     break;
+

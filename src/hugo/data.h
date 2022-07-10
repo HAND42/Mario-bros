@@ -2,25 +2,37 @@
 #pragma once
 
 //Define the map of our game;
-typedef struct Map{
+typedef struct MapGame{
 
 	char** body;
 	int level;
 	int width;
 	int height;
 
-} *Map;
+}MapGame, *Map;
 
 typedef enum ElementType{
-	BigGreenBush;
-	SmallGreenBush;
-	SimpleGreenBush;
-	TripleGreenBush;
-	DoubleGreenBush;
-	InterrogationPoint;
-	Brick;
-
-
+	BigGreenBush=1,
+	SmallGreenBush=2,
+	SimpleGreenBush=3,
+	TripleGreenBush=4,
+	DoubleGreenBush=5,
+	Stairs=6,
+	InterrogationPoint=10,
+	Brick=11,
+	SmallPipe=20,
+	MiddlePipe=21,
+	BigPipe=22,
+	SmallPipeEntry=23,
+	MiddlePipeEntry=24,
+	BigPipeEntry=25,
+	SmallPipeExit=26,
+	MiddlePipeExit=27,
+	BigPipeExit=28,
+	Castle=30,
+	Flag=40,
+	Hole=50,
+	BigHole=51,
 }ElementType;
 
 
@@ -35,8 +47,11 @@ typedef struct Element{
 	char* s;
 	int size;
 
-}Element;
+}Element, *Elem;
 
 //Function prototype
-void createMap(Map *map);
+MapGame MapInit(int lv);
+void PutElemInMap(Map map,Elem  element, int width, int height);
+void PlaceElem(Map map);
+void PrintMap(MapGame map);
 
