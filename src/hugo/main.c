@@ -1,204 +1,296 @@
-//
-// Created by Hugodurand on 30/06/2022.
-//
+
 #include <SDL.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <SDL_mixer.h>
 #include "display.h"
 #include "data.h"
+#include <string.h>
+//#include <SDL_mixer.h>
+
+extern int START_X ; 
+extern int START_Y ; 
+extern int START_W ; 
+extern int START_H ;
+
+extern int HELP_X ; 
+extern int HELP_Y ; 
+extern int HELP_W ; 
+extern int HELP_H ; 
+
+
+extern int ABOUT_X ; 
+extern int ABOUT_Y ; 
+extern int ABOUT_W ; 
+extern int ABOUT_H ; 
+
+extern int HELP_PANNEL_X ; 
+extern int HELP_PANNEL_Y ; 
+extern int HELP_PANNEL_W ; 
+extern int HELP_PANNEL_H ; 
+
+
+extern int ABOUT_PANNEL_X ; 
+extern int ABOUT_PANNEL_Y ; 
+extern int ABOUT_PANNEL_W ; 
+extern int ABOUT_PANNEL_H ; 
+
+extern int START_PANNEL_X ; 
+extern int START_PANNEL_Y ; 
+extern int START_PANNEL_W ; 
+extern int START_PANNEL_H ; 
+
 
 #define WINDOW_HEIGHT 600
 #define WINDOW_WIDTH 1066
 #define CROSS_SIZE  70
-
 #define FPS_LIMIT 33
 
-int main(int argc, char *argv[])
+int main(int argc, char **argv)
 {
-    SDL_Window *window = NULL;
-    SDL_Renderer *renderer = NULL;
+    //Création of shared data structure
+     
+     
+    SDL_Window * window = NULL; 
+    SDL_Renderer * renderer = NULL;
+    MapGame map={NULL,0,0,0};
+    DATA d={renderer, window, map};
+    
+    position();
+    MapInit(1, &(d.map)); 
+    PlaceElem(&(d.map));
+    
 
-    MapGame m;
-
-    m = MapInit(1);
-    printf("bn");
-
-    PlaceElem(&m);
-    PrintMap(m);
-
-    RenduElement background = {NULL,{0,0,0,0}, SDL_LoadBMP("images/background_start.bmp"),1,2};
-    RenduElement start = {NULL,{0,0,0,0}, SDL_LoadBMP("images/start_btn.bmp"),5,1};
-    RenduElement help = {NULL,{0,0,0,0}, SDL_LoadBMP("images/help_btn.bmp"),4,1};
-    RenduElement about = {NULL,{0,0,0,0}, SDL_LoadBMP("images/about_btn.bmp"),3,1};
-    RenduElement help_pannel = {NULL,{0,0,0,0}, SDL_LoadBMP("images/help_pannel.bmp"),1,2};
-    RenduElement about_pannel = {NULL,{0,0,0,0}, SDL_LoadBMP("images/about_pannel.bmp"),1,2};
-    RenduElement start_pannel = {NULL,{0,0,0,0},SDL_LoadBMP("images/start_pannel.bmp"),2,8};
-
-    RenduElement start_screen[8]={background,start,help,about,start_pannel,help_pannel, about_pannel};
+    VIGNETTE vignette[10]={};
+    VIGNETTE level1[500]={};
+    VIGNETTE mario[10]={};
 
     //Lancement SDL
-    if (SDL_Init(SDL_INIT_VIDEO) <0)
-        ExitWithError("Initialisation SDL");
+    if(SDL_Init(SDL_INIT_VIDEO)!=0){
+        
+        Error("SDL initialization failed",NULL, NULL);
+    }
 
     //Creation fenetre + rendu 
-    if (SDL_CreateWindowAndRenderer(WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_RESIZABLE, &window, &renderer)!=0)
-        ExitWithError("Impossible de créer la fenetre et le rendu");
+    if (SDL_CreateWindowAndRenderer(WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_RESIZABLE, &(d.window), &(d.renderer))!=0)
+       Error(" Création of renderer and window failed",d.window,d.renderer);
 
-    // le titre de la fenêtre est la chaîne de caractère passée en deuxième argument
-    SDL_SetWindowTitle(window, "MarioBrosGame");
-
-    // ajoute une icône à la fenêtre
+    /*
+    Creation of the icon and title of the window
+    */
+    SDL_SetWindowTitle(d.window, "MarioBrosGame");
     SDL_Surface *mario_bros_icon = NULL;
     mario_bros_icon = SDL_LoadBMP("images/mario_bros_icon.bmp");
-
     if (mario_bros_icon ==NULL){
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(window);
-        ExitWithError("Impossible de charger l'image");
+        Error("Loading the mario icon failed",d.window,d.renderer);
     }
+    SDL_SetWindowIcon(d.window, mario_bros_icon);
+    SDL_FreeSurface( mario_bros_icon);
 
-    SDL_SetWindowIcon(window, mario_bros_icon);
 
     SDL_bool programme_launched = SDL_TRUE;
-    int btn =0;
-    int ouvert=0;
+    char disp_orange[25]="" ;
+    char disp_pannel[25]=""; 
+    char disp_move[25]="";
+    char disp_direction[25]="right";
+    int GameStarted=0;
+    int k=0;
 
+     //Create start screen and display it for the first time
+    createStartScreen(&d, vignette); 
+    displayStartScreen(vignette ,&d ,"", "help_c");
+    SDL_RenderPresent(d.renderer);
 
-    createStartScreen(start_screen, renderer, window);
-    displayStartScreen(start_screen, renderer,window,btn);
+    
+    // Mix_Music *musique =NULL; //Création d'un pointeur de type Mix_Music
+    // musique = Mix_LoadMUS("audio/title.mp3");; //Chargement de la musique
+    // if(musique == NULL)
+    // {
+    //     printf("rt%s\n", Mix_GetError());
+    // }
 
-    SDL_RenderPresent(renderer);
-    //Load musique
-    Mix_Music *musique =NULL; //Création d'un pointeur de type Mix_Music
-    musique = Mix_LoadMUS("audio/title.mp3");; //Chargement de la musique
-    if(musique == NULL)
-    {
-        printf("rt%s\n", Mix_GetError());
-    }
+    // //Load sound effects
+    // Mix_Chunk *open_click, *close_click;
+    // open_click = Mix_LoadWAV("audio/open_sound.mp3");
+    // //close_click = Mix_LoadWAV("audio/close_sound.mp3")
 
-    //Load sound effects
-    Mix_Chunk *open_click, *close_click;
-    open_click = Mix_LoadWAV("audio/open_sound.mp3");
-    //close_click = Mix_LoadWAV("audio/close_sound.mp3")
-
-    //LoadMusic();
-    Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024);
-    //PlayMusic(musique);
-    Mix_VolumeMusic(MIX_MAX_VOLUME/2);
-    Mix_PlayMusic(musique, -1);
-
-
+    // //LoadMusic();
+    // Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024);
+    // //PlayMusic(musique);
+    // Mix_VolumeMusic(MIX_MAX_VOLUME/2);
+    // Mix_PlayMusic(musique, -1);
 
 
     /*---------------------Event Management-------------------------------*/
-
     while (programme_launched)
     {
         unsigned int frame_limit =  0;
         SDL_Event event;
         frame_limit = SDL_GetTicks() + FPS_LIMIT;
         SDL_LimitFPS(frame_limit);
-        displayStartScreen(start_screen, renderer,window,btn);
-        SDL_RenderPresent(renderer);
-        SDL_RenderClear(renderer);
-
-        while(SDL_PollEvent(&event))
-        {
-
-            switch(event.type)
+        if (!GameStarted){
+            while(SDL_PollEvent(&event))
             {
-                case SDL_MOUSEMOTION:
-                    int x=event.motion.x;
-                    int y=event.motion.y;
+                switch(event.type)
+                {
+                    case SDL_MOUSEMOTION:
+                        int x=event.motion.x;
+                        int y=event.motion.y;
 
-                    if (start_screen[1].rectangle.x<x && x<start_screen[1].rectangle.x+start_screen[1].rectangle.w  && start_screen[1].rectangle.y<y && y<start_screen[1].rectangle.y+start_screen[1].rectangle.h){
-                        
-                        changeImage(&(start_screen[1]), "images/start_btn_orange.bmp", renderer, window);
-                        changeImage(&(start_screen[2]), "images/help_btn.bmp", renderer, window);
-                        changeImage(&(start_screen[3]), "images/about_btn.bmp", renderer, window);
-    
-                    }
-                    else if (start_screen[2].rectangle.x<x && x<start_screen[2].rectangle.x+start_screen[2].rectangle.w  && start_screen[2].rectangle.y<y && y<start_screen[2].rectangle.y+start_screen[2].rectangle.h){
-                        
-                        changeImage(&(start_screen[2]), "images/help_btn_orange.bmp", renderer, window);
-                        changeImage(&(start_screen[1]), "images/start_btn.bmp", renderer, window);
-                        changeImage(&(start_screen[3]), "images/about_btn.bmp", renderer, window);
-                        
-                    }
-                    else if (start_screen[3].rectangle.x<x && x<start_screen[3].rectangle.x+start_screen[3].rectangle.w  && start_screen[3].rectangle.y<y && y<start_screen[3].rectangle.y+start_screen[3].rectangle.h){
-                        
-                        changeImage(&(start_screen[3]), "images/about_btn_orange.bmp", renderer, window);
-                        changeImage(&(start_screen[1]), "images/start_btn.bmp", renderer, window);
-                        changeImage(&(start_screen[2]), "images/help_btn.bmp", renderer, window);
-                      
-                    }
-                    else{
-                        changeImage(&(start_screen[1]), "images/start_btn.bmp", renderer, window);
-                        changeImage(&(start_screen[2]), "images/help_btn.bmp", renderer, window);
-                        changeImage(&(start_screen[3]), "images/about_btn.bmp", renderer, window);
-  
-                    }
-                    break;
-
-                case SDL_MOUSEBUTTONDOWN:
-                    int xx = event.button.x;
-                    int yy = event.button.y;
-                    
-                    if (start_screen[1].rectangle.x<xx && xx<start_screen[1].rectangle.x+start_screen[1].rectangle.w  && start_screen[1].rectangle.y<yy && yy<start_screen[1].rectangle.y+start_screen[1].rectangle.h){
-                        btn=3;
-                        Mix_PlayChannel( -1, open_click, 0 );
-                    }
-                    else if (start_screen[2].rectangle.x<xx && xx<start_screen[2].rectangle.x+start_screen[2].rectangle.w  && start_screen[2].rectangle.y<yy && yy<start_screen[2].rectangle.y+start_screen[2].rectangle.h){
-                        
-                        btn=1; 
-                        ouvert=1;
-                        Mix_PlayChannel( -1, open_click, 0 );
-                        printf("%d,%d\n", btn, ouvert);
-                        
-                    }
-                    else if (start_screen[3].rectangle.x<xx && xx<start_screen[3].rectangle.x+start_screen[3].rectangle.w  && start_screen[3].rectangle.y<yy && yy<start_screen[3].rectangle.y+start_screen[3].rectangle.h){
-                        
-                        Mix_PlayChannel( -1, open_click, 0 );
-                        btn=2; 
-                        ouvert=1;
-                    }
-
-                    if(ouvert==1 && btn==1){
-                        if (start_screen[5].rectangle.x+start_screen[5].rectangle.w - CROSS_SIZE<xx && xx<start_screen[5].rectangle.x+start_screen[5].rectangle.w  && start_screen[5].rectangle.y<yy && yy<start_screen[5].rectangle.y+CROSS_SIZE){
-                
-                            btn=0;
-                            ouvert=0;
+                        if (START_X<x && x<START_X+START_W  && START_Y<y && y<START_Y+START_H ){
+                            strcpy(disp_orange,"start_orange"); 
+                            
                         }
-                    }
-                    if(ouvert==1 && btn==2){
-                        if (start_screen[6].rectangle.x+start_screen[6].rectangle.w - CROSS_SIZE<xx && xx<start_screen[6].rectangle.x+start_screen[6].rectangle.w  && start_screen[6].rectangle.y<yy && yy<start_screen[6].rectangle.y+CROSS_SIZE){
-
-                            btn=0;
-                            ouvert=0;
+                        else if (HELP_X<x && x<HELP_X+HELP_W && HELP_Y<y && y<HELP_Y+HELP_H){
+                            
+                            strcpy(disp_orange,"help_orange"); 
+                            
                         }
-                    }
-                    break;
+                        else if (ABOUT_X<x && x<ABOUT_X+ABOUT_W  && ABOUT_Y<y && y<ABOUT_Y+ABOUT_H){
+                            
+                            strcpy(disp_orange,"about_orange"); 
+                          
+                        }
+                        else{
+                             
+                            strcpy(disp_orange,""); 
+                        }
+                        SDL_RenderClear(d.renderer);
+                        displayStartScreen(vignette ,&d , disp_orange, disp_pannel); 
+                        SDL_RenderPresent(d.renderer);
+                        break;
 
-                case SDL_QUIT:
-                    programme_launched = SDL_FALSE;
-                    break;
+                    case SDL_MOUSEBUTTONDOWN:
+                        int xx = event.button.x;
+                        int yy = event.button.y;
+                        
+                        if (START_X<xx && xx<START_X+START_W  && START_Y<yy && yy<START_Y+START_H){
+                            GameStarted =1;
+                            CreateMap(&d, level1);
+                            // CreateMario(mario ,&d);
+                            strcpy(disp_pannel,"afficher"); 
+                            SDL_RenderClear(d.renderer);
+                            displayMap(&d, level1);
+                            SDL_RenderPresent(d.renderer);
+                            //Mix_PlayChannel( -1, open_click, 0 );
+                        }
+                        else if (HELP_X<xx && xx<HELP_X+HELP_W  && HELP_Y<yy && yy<HELP_Y+HELP_H ){
+                            
+                            strcpy(disp_pannel, "help"); 
+                            //Mix_PlayChannel( -1, open_click, 0 );
+                            
+                            
+                        }
+                        else if (ABOUT_X<xx && xx<ABOUT_X+HELP_W  && ABOUT_Y<yy && yy<ABOUT_Y+ABOUT_H){
+                            strcpy(disp_pannel ,"about");
+                            // Mix_PlayChannel( -1, open_click, 0 );
+                            
+                        }
+
+                        if(!strcmp(disp_pannel,"help")){
+                            if (HELP_PANNEL_X+HELP_PANNEL_W - CROSS_SIZE<xx && xx<HELP_PANNEL_X+HELP_PANNEL_W  && HELP_PANNEL_Y<yy && yy<HELP_PANNEL_Y+CROSS_SIZE){
+                                strcpy(disp_pannel,"help_c");
+                              
+                            }
+                        }
+                        if(!strcmp(disp_pannel,"about")){
+                            if (ABOUT_PANNEL_X+ABOUT_PANNEL_W - CROSS_SIZE<xx && xx<ABOUT_PANNEL_X+ABOUT_PANNEL_W  && ABOUT_PANNEL_Y<yy && yy<ABOUT_PANNEL_Y+CROSS_SIZE){
+                                strcpy(disp_pannel,"about_c");
+                                
+                            }
+                        }
+                        if (!GameStarted){
+                            SDL_RenderClear(d.renderer);
+                            displayStartScreen(vignette ,&d , disp_orange, disp_pannel); 
+                            SDL_RenderPresent(d.renderer);
+                        }
+                        break;
+
+                    case SDL_QUIT:
+                        programme_launched = SDL_FALSE;
+                        break;
+
+                        default:
+                            break;
+                }
+            }
+
+            
+        }
+        else{
+            while(SDL_PollEvent(&event)){
+
+                switch(event.type)
+                {
+                    case SDL_MOUSEBUTTONDOWN:
+                        int xx = event.button.x;
+                        int yy = event.button.y;
+                        SDL_RenderClear(d.renderer);
+                        displayMap(&d, level1);
+                        SDL_RenderPresent(d.renderer);
+                        break;
+
+                    case SDL_KEYDOWN:
+                        switch (event.key.keysym.sym){
+                            case SDLK_TAB:
+                                SDL_RenderClear(d.renderer);
+                                MoveMap(&d, level1);
+                                displayMap(&d, level1);
+                                SDL_RenderPresent(d.renderer);
+                                break;
+
+                            case SDLK_RIGHT:
+                                // strcpy(disp_direction ,"right");
+
+                                // SDL_RenderClear(d.renderer);
+                                // displayMap(&d, level1, k);
+                                // ForwardStage1(mario, &d);
+                                // SDL_RenderPresent(d.renderer);
+
+                                // SDL_Delay(200);
+
+                                // SDL_RenderClear(d.renderer);
+                                // displayMap(&d, level1, k);
+                                // ForwardStage2(mario, &d);
+                                // SDL_RenderPresent(d.renderer);
+
+                                // SDL_Delay(200);
+
+                                break;
+
+                            case SDLK_LEFT:
+                                // strcpy(disp_move ,"move_left");
+                                // strcpy(disp_direction ,"left");
+                                break;
+
+                        }
+                        break;
+                    case SDL_QUIT:
+                        programme_launched = SDL_FALSE;
+                        break;
 
                     default:
-                        break;
+                        break; 
+                }
+                // strcpy(disp_move,"");
+                SDL_RenderClear(d.renderer);
+                displayMap(&d, level1);
+                // MoveMario(mario ,&d , "", disp_direction);
+                SDL_RenderPresent(d.renderer);
+
             }
         }
 
     }
 
     /*--------------------Closing Window---------------------*/
-    Mix_CloseAudio();
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
+    // Mix_CloseAudio();
+    SDL_DestroyRenderer(d.renderer);
+    SDL_DestroyWindow( d.window);
     SDL_Quit();
 
-    return EXIT_SUCCESS;
+    return 0;
 }
+
 
 
 /*

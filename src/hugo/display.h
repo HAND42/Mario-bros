@@ -1,35 +1,82 @@
-//
-// Created by hugod on 01/07/2022.
-//
-#ifndef __DISPLAY__C__
-#define __DISPLAY__C__
+#pragma once
 
-#include <SDL_mixer.h>
+#include "data.h"
+#include <SDL.h>
 
-typedef struct RenduElement{
-    SDL_Texture *texture;
-    SDL_Rect rectangle;
-    SDL_Surface *image;
-    int nb1;
-    int nb2;
-} RenduElement, *Rendu;
+//Ici seront définies les constante ou seront placés les éléments
+//----------------Start screen constante -------------------------------------
+#define WINDOW_HEIGHT 600
+#define WINDOW_WIDTH 1066
+#define BACKGROUND_X 0
+#define BACKGROUND_Y 0
 
-// void PlayMusic(Mix_Music *musique);
 
-// void LoadMusic(void);
+extern int START_X ; 
+extern int START_Y ; 
+extern int START_W ; 
+extern int START_H ;
 
-void displayRender(RenduElement *r, SDL_Renderer *renderer, SDL_Window *window);
+extern int HELP_X ; 
+extern int HELP_Y ; 
+extern int HELP_W ; 
+extern int HELP_H ; 
 
-void createStartScreen(RenduElement* rendu, SDL_Renderer *renderer, SDL_Window *window);
 
-void displayStartScreen(RenduElement* rendu, SDL_Renderer *renderer, SDL_Window *window, int btn);
+extern int ABOUT_X ; 
+extern int ABOUT_Y ; 
+extern int ABOUT_W ; 
+extern int ABOUT_H ; 
 
-void changeImage(RenduElement *r, char* img,SDL_Renderer *renderer, SDL_Window *window);
+extern int HELP_PANNEL_X ; 
+extern int HELP_PANNEL_Y ; 
+extern int HELP_PANNEL_W ; 
+extern int HELP_PANNEL_H ; 
 
-void createRender (RenduElement *r, SDL_Renderer *renderer, SDL_Window *window,int nb1,int nb2);
 
-void ExitWithError(const char *message);
+extern int ABOUT_PANNEL_X ; 
+extern int ABOUT_PANNEL_Y ; 
+extern int ABOUT_PANNEL_W ; 
+extern int ABOUT_PANNEL_H ; 
 
-void SDL_LimitFPS(unsigned int limit);
+extern int START_PANNEL_X ; 
+extern int START_PANNEL_Y ; 
+extern int START_PANNEL_W ; 
+extern int START_PANNEL_H ; 
 
-#endif
+
+ 
+typedef struct VIGNETTE {
+    SDL_Texture* texture; 
+    SDL_Rect * rectangle; 
+} VIGNETTE,  *Vignette; 
+
+enum jour {
+LUNDI,
+MARDI,
+MERCREDI,
+JEUDI,
+VENDREDI,
+SAMEDI,
+DIMANCHE
+} ;
+
+
+extern void position(); 
+extern VIGNETTE AddTexture(DATA *d, char* img_name); 
+extern void Error(const char * message,SDL_Window * window, SDL_Renderer * renderer ); 
+extern void SDL_LimitFPS(unsigned int limit);
+extern void createStartScreen(DATA * d, VIGNETTE* vignette);
+extern void displayTexture(SDL_Texture* texture, SDL_Rect  rectangle, DATA *d );  
+extern void displayStartScreen(VIGNETTE * v,data d , char * disp_orange, char * disp_pannel);
+extern void CreateMap(data d, VIGNETTE * v);
+extern void displayMap(data d, VIGNETTE * v);
+extern void changeImage(DATA *d, char* img_name, VIGNETTE *v);
+extern void MoveMap(data d, VIGNETTE *v);
+// extern void MoveMario(VIGNETTE * v,data d , char * disp_move, char * disp_direction);
+// extern void CreateMario(VIGNETTE *v, DATA * d);
+extern void AddRect(DATA * d,VIGNETTE * v, int x , int y);
+
+// void BackwardStage1(VIGNETTE * v,data d);
+// void ForwardStage1(VIGNETTE * v,data d);
+// void ForwardStage2(VIGNETTE * v,data d);
+// void BackwardStage1(VIGNETTE * v,data d);

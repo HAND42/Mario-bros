@@ -1,7 +1,14 @@
 
 #pragma once
+#include <SDL.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
+ 
 //Define the map of our game;
+
+//la donnée partagée
 typedef struct MapGame{
 
 	char** body;
@@ -11,12 +18,22 @@ typedef struct MapGame{
 
 }MapGame, *Map;
 
+typedef struct donnée {
+
+	SDL_Renderer *renderer; 
+	SDL_Window* window; 
+	MapGame map; 
+}DATA, *data; 
+
+
+
+
 typedef enum ElementType{
 	BigGreenBush=1,
 	SmallGreenBush=2,
 	SimpleGreenBush=3,
-	TripleGreenBush=4,
-	DoubleGreenBush=5,
+	DoubleGreenBush=4,
+	TripleGreenBush=5,
 	Stairs=6,
 	InterrogationPoint=10,
 	Brick=11,
@@ -49,9 +66,12 @@ typedef struct Element{
 
 }Element, *Elem;
 
+extern Element NIVEAU[3][300] ; 
+
+
 //Function prototype
-MapGame MapInit(int lv);
-void PutElemInMap(Map map,Elem  element, int width, int height);
-void PlaceElem(Map map);
-void PrintMap(MapGame map);
+extern void MapInit(int lv, MapGame * map);
+extern void PutElemInMap(Map map,Elem  element, int width, int height);
+extern void PlaceElem(Map map);
+extern void PrintMap(Map map);
 
